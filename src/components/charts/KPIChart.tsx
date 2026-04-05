@@ -1,76 +1,123 @@
 'use client';
 import {
   ResponsiveContainer,
-  AreaChart,
-  Area,
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ReferenceLine,
-  ReferenceArea,
+  AreaChart, Area,
+  LineChart, Line,
+  BarChart,  Bar, Cell,
+  XAxis, YAxis,
+  CartesianGrid, Tooltip,
+  ReferenceLine, ReferenceArea,
 } from 'recharts';
 import { MetricView, Indicator } from '@/types';
+import { CagrPeriods } from '@/hooks/useIndicatorData';
 import { formatValue } from '@/lib/worldbank';
 
 export const CHART_X_DOMAIN: [number, number] = [1960, 2024];
 
-// Three historical eras — shaded on every chart
-const PERIODS = [
-  { x1: 1960, x2: 1991, fill: '#8A817C', label: 'Pre-1991',   labelColor: '#463F3A' },
-  { x1: 1991, x2: 2014, fill: '#BCB8B1', label: '1991–2014',  labelColor: '#463F3A' },
-  { x1: 2014, x2: 2024, fill: '#E0AFA0', label: '2014+',      labelColor: '#463F3A' },
-];
+const C_ROSE  = '#E0AFA0';
+const C_DARK  = '#463F3A';
+const C_STONE = '#8A817C';
+const C_ASH   = '#BCB8B1';
 
-// Custom SVG label rendered inside each ReferenceArea band
-interface LabelProps {
+// ── Period band definitions ───────────────────────────────────────────────────
+const BAND_DEFS = [
+  { x1: 1960, x2: 1991, fill: C_STONE,  key: 'p1', label: 'Pre-1991' },
+  { x1: 1991, x2: 2014, fill: C_ASH,    key: 'p2', label: '1991–2014' },
+  { x1: 2014, x2: 2024, fill: C_ROSE,   key: 'p3', label: '2014+' },
+] as const;
+
+// ── CAGR in-band annotation ───────────────────────────────────────────────────
+interface AnnotationProps {
   viewBox?: { x: number; y: number; width: number; height: number };
-  value?: string;
-  color?: string;
+  periodLabel: string;
+  cagr: number | null;
+  bandFill: string;
 }
-function PeriodLabel({ viewBox, value, color = '#463F3A' }: LabelProps) {
-  if (!viewBox || !value) return null;
+
+function PeriodAnnotation({ viewBox, periodLabel, cagr, bandFill }: AnnotationProps) {
+  if (!viewBox) return null;
   const { x, y, width } = viewBox;
-  if (width < 20) return null; // skip label if band too narrow
+  if (width < 28) return null;
+
+  const cx = x + width / 2;
+  const hasCAGR = cagr !== null;
+  const positive = hasCAGR && cagr! >= 0;
+  const cagrColor = positive ? '#15803d' : '#b91c1c';
+  const arrow = !hasCAGR ? '' : cagr! > 0.05 ? '▲' : cagr! < -0.05 ? '▼' : '→';
+  const cagrStr = hasCAGR
+    ? `${cagr! >= 0 ? '+' : ''}${cagr!.toFixed(1)}%`
+    : null;
+
   return (
-    <text
-      x={x + width / 2}
-      y={y + 15}
-      textAnchor="middle"
-      fontSize={9}
-      fontWeight={700}
-      letterSpacing={0.3}
-      fill={color}
-      fillOpacity={0.55}
-      style={{ userSelect: 'none', pointerEvents: 'none' }}
-    >
-      {value}
-    </text>
+    <g style={{ userSelect: 'none', pointerEvents: 'none' }}>
+      {/* Period name */}
+      <text
+        x={cx} y={y + 13}
+        textAnchor="middle"
+        fontSize={8} fontWeight={700}
+        fill={C_DARK} fillOpacity={0.45}
+        letterSpacing={0.3}
+      >
+        {periodLabel}
+      </text>
+
+      {/* Arrow + CAGR value */}
+      {hasCAGR && (
+        <text
+          x={cx} y={y + 25}
+          textAnchor="middle"
+          fontSize={9.5} fontWeight={800}
+          fill={cagrColor} fillOpacity={0.82}
+        >
+          {arrow} {cagrStr}
+        </text>
+      )}
+
+      {/* "p.a." sub-label */}
+      {hasCAGR && (
+        <text
+          x={cx} y={y + 35}
+          textAnchor="middle"
+          fontSize={7} fontWeight={500}
+          fill={C_STONE} fillOpacity={0.55}
+        >
+          p.a.
+        </text>
+      )}
+    </g>
   );
 }
 
-function periodBands() {
-  return PERIODS.map((p) => (
+// ── Period bands renderer ─────────────────────────────────────────────────────
+function periodBands(cagrPeriods?: CagrPeriods) {
+  const cagrMap: Record<string, number | null> = {
+    p1: cagrPeriods?.p1 ?? null,
+    p2: cagrPeriods?.p2 ?? null,
+    p3: cagrPeriods?.p3 ?? null,
+  };
+
+  return BAND_DEFS.map((b) => (
     <ReferenceArea
-      key={p.label}
-      x1={p.x1}
-      x2={p.x2}
-      fill={p.fill}
+      key={b.label}
+      x1={b.x1}
+      x2={b.x2}
+      fill={b.fill}
       fillOpacity={0.07}
-      stroke={p.fill}
-      strokeOpacity={0.25}
+      stroke={b.fill}
+      strokeOpacity={0.2}
       strokeWidth={1}
-      strokeDasharray="4 0"
-      label={<PeriodLabel value={p.label} color={p.labelColor} />}
+      label={
+        <PeriodAnnotation
+          periodLabel={b.label}
+          cagr={cagrMap[b.key]}
+          bandFill={b.fill}
+        />
+      }
     />
   ));
 }
 
-// ── Tooltip ──────────────────────────────────────────────────────────────────
+// ── Tooltip ───────────────────────────────────────────────────────────────────
 function CustomTooltip({
   active, payload, label, indicator, metricView,
 }: {
@@ -83,24 +130,21 @@ function CustomTooltip({
   if (!active || !payload?.length) return null;
   const value = payload[0].value;
   let formatted = '';
-  if (metricView === 'yoy') formatted = `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
-  else if (metricView === 'pct_gdp') formatted = `${value.toFixed(2)}% of GDP`;
+  if      (metricView === 'yoy')        formatted = `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+  else if (metricView === 'pct_gdp')    formatted = `${value.toFixed(2)}% of GDP`;
   else if (metricView === 'per_capita') formatted = formatValue(value, indicator.format, 'none', indicator.unitShort);
-  else formatted = formatValue(value, indicator.format, indicator.scale, indicator.unitShort);
+  else                                  formatted = formatValue(value, indicator.format, indicator.scale, indicator.unitShort);
 
   return (
-    <div className="bg-[#463F3A] text-[#F4F3EE] px-3 py-2 rounded-lg shadow-xl text-sm border border-[#8A817C]/20">
-      <div className="font-semibold text-[#E0AFA0] mb-0.5">{label}</div>
-      <div>{formatted}</div>
+    <div className="bg-[#463F3A] text-[#F4F3EE] px-3 py-2 rounded-lg shadow-xl text-sm">
+      <div className="font-semibold text-[#E0AFA0] mb-0.5 text-xs">{label}</div>
+      <div className="font-medium">{formatted}</div>
     </div>
   );
 }
 
-// ── Shared axis helpers ───────────────────────────────────────────────────────
-const CHART_COLOR  = '#E0AFA0';
-const CHART_COLOR_DARK = '#463F3A';
-
-function makeXAxis() {
+// ── Shared axes ───────────────────────────────────────────────────────────────
+function XAxis_() {
   return (
     <XAxis
       dataKey="year"
@@ -108,7 +152,7 @@ function makeXAxis() {
       domain={CHART_X_DOMAIN}
       allowDataOverflow={false}
       tickCount={7}
-      tick={{ fill: '#8A817C', fontSize: 10 }}
+      tick={{ fill: C_STONE, fontSize: 10 }}
       tickLine={false}
       axisLine={false}
       tickFormatter={(v) => String(v)}
@@ -116,83 +160,89 @@ function makeXAxis() {
   );
 }
 
-function makeYAxis() {
+function YAxis_() {
   return (
     <YAxis
-      tick={{ fill: '#8A817C', fontSize: 10 }}
+      tick={{ fill: C_STONE, fontSize: 10 }}
       tickLine={false}
       axisLine={false}
       width={44}
       tickFormatter={(v) => {
-        const abs = Math.abs(v);
-        if (abs >= 1e12) return `${(v / 1e12).toFixed(1)}T`;
-        if (abs >= 1e9)  return `${(v / 1e9).toFixed(1)}B`;
-        if (abs >= 1e6)  return `${(v / 1e6).toFixed(1)}M`;
-        if (abs >= 1e3)  return `${(v / 1e3).toFixed(1)}K`;
+        const a = Math.abs(v);
+        if (a >= 1e12) return `${(v / 1e12).toFixed(1)}T`;
+        if (a >= 1e9)  return `${(v / 1e9).toFixed(1)}B`;
+        if (a >= 1e6)  return `${(v / 1e6).toFixed(1)}M`;
+        if (a >= 1e3)  return `${(v / 1e3).toFixed(1)}K`;
         return Number(v.toFixed(1)).toString();
       }}
     />
   );
 }
 
-const GRID = <CartesianGrid strokeDasharray="3 3" stroke="#BCB8B1" opacity={0.22} />;
+const GRID = <CartesianGrid strokeDasharray="3 3" stroke={C_ASH} opacity={0.22} />;
+const MARGIN = { top: 42, right: 6, left: 0, bottom: 0 };
 
 // ── Main component ────────────────────────────────────────────────────────────
 interface Props {
   data: { year: number; value: number | null }[];
   indicator: Indicator;
   metricView: MetricView;
+  cagrPeriods?: CagrPeriods;
   height?: number;
 }
 
-export default function KPIChart({ data, indicator, metricView, height = 260 }: Props) {
+export default function KPIChart({ data, indicator, metricView, cagrPeriods, height = 270 }: Props) {
   if (!data.length) {
     return (
-      <div style={{ height }} className="flex items-center justify-center text-[#BCB8B1] text-sm">
-        No data available
+      <div style={{ height }} className="flex flex-col items-center justify-center gap-2 text-[#BCB8B1]">
+        <svg className="w-8 h-8 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        <span className="text-xs">No data available</span>
       </div>
     );
   }
 
   const hasNegative = data.some((d) => (d.value ?? 0) < 0);
+  // YoY always renders as bar; otherwise use indicator's preferred type
   const chartType = metricView === 'yoy' ? 'bar' : indicator.chartType;
-
-  const commonProps = {
-    data,
-    margin: { top: 20, right: 6, left: 0, bottom: 0 },
-  };
 
   const tooltip = (
     <Tooltip
       content={<CustomTooltip indicator={indicator} metricView={metricView} />}
-      cursor={{ stroke: '#BCB8B1', strokeWidth: 1 }}
+      cursor={{ stroke: C_ASH, strokeWidth: 1 }}
     />
   );
 
+  const bands = periodBands(cagrPeriods);
+  const commonProps = { data, margin: MARGIN };
+
+  // ── Area ────────────────────────────────────────────────────────────────────
   if (chartType === 'area') {
     return (
       <ResponsiveContainer width="100%" height={height}>
         <AreaChart {...commonProps}>
           <defs>
-            <linearGradient id={`grad-${indicator.id}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%"  stopColor={CHART_COLOR} stopOpacity={0.45} />
-              <stop offset="95%" stopColor={CHART_COLOR} stopOpacity={0.02} />
+            <linearGradient id={`g-${indicator.id}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%"  stopColor={C_ROSE} stopOpacity={0.45} />
+              <stop offset="95%" stopColor={C_ROSE} stopOpacity={0.02} />
             </linearGradient>
           </defs>
-          {periodBands()}
+          {bands}
           {GRID}
-          {makeXAxis()}
-          {makeYAxis()}
+          <XAxis_ />
+          <YAxis_ />
           {tooltip}
-          {hasNegative && <ReferenceLine y={0} stroke="#BCB8B1" strokeDasharray="3 3" />}
+          {hasNegative && <ReferenceLine y={0} stroke={C_ASH} strokeDasharray="3 3" />}
           <Area
             type="monotone"
             dataKey="value"
-            stroke={CHART_COLOR}
+            stroke={C_ROSE}
             strokeWidth={2}
-            fill={`url(#grad-${indicator.id})`}
+            fill={`url(#g-${indicator.id})`}
             dot={false}
-            activeDot={{ r: 4, fill: CHART_COLOR, stroke: '#F4F3EE', strokeWidth: 2 }}
+            activeDot={{ r: 4, fill: C_ROSE, stroke: '#F4F3EE', strokeWidth: 2 }}
             connectNulls={false}
           />
         </AreaChart>
@@ -200,44 +250,48 @@ export default function KPIChart({ data, indicator, metricView, height = 260 }: 
     );
   }
 
+  // ── Bar (incl. YoY) ─────────────────────────────────────────────────────────
   if (chartType === 'bar') {
     return (
       <ResponsiveContainer width="100%" height={height}>
         <BarChart {...commonProps}>
-          {periodBands()}
+          {bands}
           {GRID}
-          {makeXAxis()}
-          {makeYAxis()}
+          <XAxis_ />
+          <YAxis_ />
           {tooltip}
-          {hasNegative && <ReferenceLine y={0} stroke="#8A817C" />}
-          <Bar
-            dataKey="value"
-            radius={[2, 2, 0, 0]}
-            fill={CHART_COLOR}
-            maxBarSize={10}
-          />
+          {hasNegative && <ReferenceLine y={0} stroke={C_STONE} />}
+          <Bar dataKey="value" radius={[2, 2, 0, 0]} maxBarSize={10}>
+            {data.map((entry, i) => (
+              <Cell
+                key={`cell-${i}`}
+                fill={(entry.value ?? 0) >= 0 ? C_ROSE : '#b25f5f'}
+                fillOpacity={0.85}
+              />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     );
   }
 
-  // line
+  // ── Line ────────────────────────────────────────────────────────────────────
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart {...commonProps}>
-        {periodBands()}
+        {bands}
         {GRID}
-        {makeXAxis()}
-        {makeYAxis()}
+        <XAxis_ />
+        <YAxis_ />
         {tooltip}
-        {hasNegative && <ReferenceLine y={0} stroke="#BCB8B1" strokeDasharray="3 3" />}
+        {hasNegative && <ReferenceLine y={0} stroke={C_ASH} strokeDasharray="3 3" />}
         <Line
           type="monotone"
           dataKey="value"
-          stroke={CHART_COLOR_DARK}
+          stroke={C_DARK}
           strokeWidth={2}
           dot={false}
-          activeDot={{ r: 4, fill: CHART_COLOR_DARK, stroke: '#F4F3EE', strokeWidth: 2 }}
+          activeDot={{ r: 4, fill: C_DARK, stroke: '#F4F3EE', strokeWidth: 2 }}
           connectNulls={false}
         />
       </LineChart>

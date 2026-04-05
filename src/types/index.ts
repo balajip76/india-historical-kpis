@@ -1,4 +1,4 @@
-export type MetricView = 'actual' | 'yoy' | 'cagr' | 'pct_gdp' | 'per_capita';
+export type MetricView = 'actual' | 'yoy' | 'pct_gdp' | 'per_capita';
 
 export interface Country {
   code: string; // ISO2
@@ -40,7 +40,6 @@ export interface Source {
 export interface DataPoint {
   year: number;
   value: number | null;
-  // Computed fields
   yoy?: number | null;
   pct_gdp?: number | null;
   per_capita?: number | null;
@@ -74,13 +73,3 @@ export interface WBDataEntry {
 }
 
 export type TimeRange = '1960-2000' | '2000-2010' | '2010-present' | 'all' | 'custom';
-
-export interface ChartConfig {
-  timeRange: TimeRange;
-  customStart?: number;
-  customEnd?: number;
-  metricView: MetricView;
-  cagrStartYear?: number;
-  cagrEndYear?: number;
-  smoothing: boolean;
-}

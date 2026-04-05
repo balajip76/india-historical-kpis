@@ -6,9 +6,9 @@ import { computeCAGR } from '@/lib/worldbank';
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export interface CagrPeriods {
-  p1: number | null; // 1960–1991  pre-liberalisation
-  p2: number | null; // 1991–2014  post-liberalisation
-  p3: number | null; // 2014–latest  recent era
+  p1: number | null; // 1960–1991
+  p2: number | null; // 1991–2014
+  p3: number | null; // 2014–latestYear
   latestYear: number;
 }
 
@@ -32,30 +32,21 @@ export function useIndicatorData(
 
   const rawData = data?.data ?? [];
 
-  // For CAGR mode we still show actual values on the chart; stats shown separately
   const chartData = rawData.map((point) => {
     let displayValue: number | null = null;
     switch (metricView) {
-      case 'yoy':
-        displayValue = point.yoy ?? null;
-        break;
-      case 'pct_gdp':
-        displayValue = point.pct_gdp ?? null;
-        break;
-      case 'per_capita':
-        displayValue = point.per_capita ?? null;
-        break;
-      // 'cagr' shows the actual series; stats shown in separate panel
-      default:
-        displayValue = point.value;
+      case 'yoy':       displayValue = point.yoy      ?? null; break;
+      case 'pct_gdp':   displayValue = point.pct_gdp  ?? null; break;
+      case 'per_capita':displayValue = point.per_capita ?? null; break;
+      default:          displayValue = point.value;
     }
     return { year: point.year, value: displayValue };
   });
 
-  // Three preset CAGR periods (always computed from actual values)
   const validData = rawData.filter((d) => d.value !== null);
   const latestYear = validData.at(-1)?.year ?? 2024;
 
+  // Always compute CAGR periods from actual values — rendered directly on chart bands
   const cagrPeriods: CagrPeriods = {
     p1: computeCAGR(rawData, 1960, 1991),
     p2: computeCAGR(rawData, 1991, 2014),
