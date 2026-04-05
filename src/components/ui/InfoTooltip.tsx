@@ -1,31 +1,58 @@
 'use client';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Props {
   content: string;
 }
 
+const TOOLTIP_W = 260;
+
 export default function InfoTooltip({ content }: Props) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ btnCenterX: 0, btnTopY: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const readPos = useCallback(() => {
+    if (!btnRef.current) return;
+    const r = btnRef.current.getBoundingClientRect();
+    setPos({ btnCenterX: r.left + r.width / 2, btnTopY: r.top });
+  }, []);
 
   const show = useCallback(() => {
     if (hideTimer.current) clearTimeout(hideTimer.current);
+    readPos();
     setOpen(true);
-  }, []);
+  }, [readPos]);
 
   const scheduleHide = useCallback(() => {
     hideTimer.current = setTimeout(() => setOpen(false), 180);
   }, []);
 
-  const toggleClick = useCallback((e: React.MouseEvent) => {
+  const toggle = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!open) readPos();
     setOpen((v) => !v);
-  }, []);
+  }, [open, readPos]);
+
+  // Close on scroll so it doesn't drift
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    window.addEventListener('scroll', close, { passive: true });
+    return () => window.removeEventListener('scroll', close);
+  }, [open]);
+
+  // Clamp left edge so tooltip stays inside viewport
+  const left = Math.max(8, Math.min(pos.btnCenterX - TOOLTIP_W / 2, (typeof window !== 'undefined' ? window.innerWidth : 1200) - TOOLTIP_W - 8));
+  // Caret offset inside the box so it always points at the button
+  const caretOffset = Math.max(10, Math.min(pos.btnCenterX - left, TOOLTIP_W - 10));
 
   return (
-    <span className="relative inline-flex items-center flex-shrink-0">
+    <>
       <button
+        ref={btnRef}
         type="button"
         aria-label="Show period summary"
         aria-expanded={open}
@@ -33,9 +60,9 @@ export default function InfoTooltip({ content }: Props) {
         onMouseLeave={scheduleHide}
         onFocus={show}
         onBlur={scheduleHide}
-        onClick={toggleClick}
+        onClick={toggle}
         className={[
-          'w-[15px] h-[15px] rounded-full flex items-center justify-center',
+          'w-[15px] h-[15px] rounded-full flex items-center justify-center flex-shrink-0',
           'border transition-colors duration-150',
           'focus:outline-none focus-visible:ring-1 focus-visible:ring-[#E0AFA0]',
           open
@@ -47,26 +74,42 @@ export default function InfoTooltip({ content }: Props) {
         i
       </button>
 
-      {open && (
+      {open && typeof document !== 'undefined' && createPortal(
         <div
           role="tooltip"
           onMouseEnter={show}
           onMouseLeave={scheduleHide}
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50
-                     w-64 bg-[#2E2A27] text-[#F4F3EE] rounded-xl shadow-2xl p-3
-                     text-[11px] leading-relaxed pointer-events-auto"
+          style={{
+            position: 'fixed',
+            top: pos.btnTopY,
+            left,
+            width: TOOLTIP_W,
+            transform: 'translateY(calc(-100% - 8px))',
+            zIndex: 9999,
+          }}
+          className="bg-[#2E2A27] text-[#F4F3EE] rounded-xl shadow-2xl p-3 text-[11px] leading-relaxed"
         >
-          {/* Caret */}
+          {/* Caret arrow points down at the button */}
           <span
-            className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent"
-            style={{ borderTopColor: '#2E2A27' }}
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: caretOffset,
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '5px solid transparent',
+              borderRight: '5px solid transparent',
+              borderTop: '6px solid #2E2A27',
+            }}
           />
           <p className="text-[10px] font-semibold text-[#E0AFA0] mb-1.5 uppercase tracking-wide">
             Period summary
           </p>
           {content}
-        </div>
+        </div>,
+        document.body
       )}
-    </span>
+    </>
   );
 }
