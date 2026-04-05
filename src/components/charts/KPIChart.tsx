@@ -3,7 +3,7 @@ import {
   ResponsiveContainer,
   AreaChart, Area,
   LineChart, Line,
-  BarChart,  Bar, Cell,
+  BarChart, Bar, Cell,
   XAxis, YAxis,
   CartesianGrid, Tooltip,
   ReferenceLine, ReferenceArea,
@@ -12,75 +12,86 @@ import { MetricView, Indicator } from '@/types';
 import { CagrPeriods } from '@/hooks/useIndicatorData';
 import { formatValue } from '@/lib/worldbank';
 
-export const CHART_X_DOMAIN: [number, number] = [1960, 2024];
+// X-axis domain — extended to 2025 to include the final period band
+export const CHART_X_DOMAIN: [number, number] = [1960, 2025];
 
+// Palette colours
 const C_ROSE  = '#E0AFA0';
 const C_DARK  = '#463F3A';
 const C_STONE = '#8A817C';
 const C_ASH   = '#BCB8B1';
 
-// ── Period band definitions ───────────────────────────────────────────────────
+// ── Four era bands ────────────────────────────────────────────────────────────
 const BAND_DEFS = [
-  { x1: 1960, x2: 1991, fill: C_STONE,  key: 'p1', label: 'Pre-1991' },
-  { x1: 1991, x2: 2014, fill: C_ASH,    key: 'p2', label: '1991–2014' },
-  { x1: 2014, x2: 2024, fill: C_ROSE,   key: 'p3', label: '2014+' },
+  { x1: 1960, x2: 1991, fill: C_DARK,  key: 'p1', label: '1960–1991' },
+  { x1: 1991, x2: 2004, fill: C_STONE, key: 'p2', label: '1991–2004' },
+  { x1: 2004, x2: 2014, fill: C_ASH,   key: 'p3', label: '2004–2014' },
+  { x1: 2014, x2: 2025, fill: C_ROSE,  key: 'p4', label: '2014–2025' },
 ] as const;
 
-// ── CAGR in-band annotation ───────────────────────────────────────────────────
+// ── CAGR annotation rendered inside each band ─────────────────────────────────
 interface AnnotationProps {
   viewBox?: { x: number; y: number; width: number; height: number };
   periodLabel: string;
   cagr: number | null;
-  bandFill: string;
 }
 
-function PeriodAnnotation({ viewBox, periodLabel, cagr, bandFill }: AnnotationProps) {
+function PeriodAnnotation({ viewBox, periodLabel, cagr }: AnnotationProps) {
   if (!viewBox) return null;
   const { x, y, width } = viewBox;
-  if (width < 28) return null;
+  if (width < 22) return null; // band too narrow — skip entirely
 
   const cx = x + width / 2;
   const hasCAGR = cagr !== null;
   const positive = hasCAGR && cagr! >= 0;
-  const cagrColor = positive ? '#15803d' : '#b91c1c';
+  const cagrColor = positive ? '#166534' : '#991b1b'; // green-800 / red-800
   const arrow = !hasCAGR ? '' : cagr! > 0.05 ? '▲' : cagr! < -0.05 ? '▼' : '→';
   const cagrStr = hasCAGR
     ? `${cagr! >= 0 ? '+' : ''}${cagr!.toFixed(1)}%`
     : null;
 
+  // Abbreviated label for very narrow bands
+  const displayLabel = width < 62 ? periodLabel.slice(2) : periodLabel; // "'91–2004" style
+
   return (
     <g style={{ userSelect: 'none', pointerEvents: 'none' }}>
-      {/* Period name */}
+      {/* Period label — dark, bold, highly readable */}
       <text
-        x={cx} y={y + 13}
+        x={cx} y={y + 14}
         textAnchor="middle"
-        fontSize={8} fontWeight={700}
-        fill={C_DARK} fillOpacity={0.45}
-        letterSpacing={0.3}
+        fontSize={width < 62 ? 8 : 9}
+        fontWeight={900}
+        fill={C_DARK}
+        fillOpacity={0.80}
+        letterSpacing={0.2}
       >
-        {periodLabel}
+        {displayLabel}
       </text>
 
-      {/* "CAGR" label */}
+      {/* "CAGR" descriptor */}
       {hasCAGR && (
         <text
-          x={cx} y={y + 24}
+          x={cx} y={y + 25}
           textAnchor="middle"
-          fontSize={7} fontWeight={600}
-          fill={C_STONE} fillOpacity={0.5}
-          letterSpacing={0.5}
+          fontSize={7}
+          fontWeight={700}
+          fill={C_STONE}
+          fillOpacity={0.65}
+          letterSpacing={0.6}
         >
           CAGR
         </text>
       )}
 
-      {/* Arrow + value */}
+      {/* Arrow + value — coloured by direction */}
       {hasCAGR && (
         <text
-          x={cx} y={y + 35}
+          x={cx} y={y + 37}
           textAnchor="middle"
-          fontSize={10} fontWeight={800}
-          fill={cagrColor} fillOpacity={0.85}
+          fontSize={width < 62 ? 9 : 10.5}
+          fontWeight={800}
+          fill={cagrColor}
+          fillOpacity={0.90}
         >
           {arrow} {cagrStr}
         </text>
@@ -89,12 +100,13 @@ function PeriodAnnotation({ viewBox, periodLabel, cagr, bandFill }: AnnotationPr
   );
 }
 
-// ── Period bands renderer ─────────────────────────────────────────────────────
+// ── Render all four bands ─────────────────────────────────────────────────────
 function periodBands(cagrPeriods?: CagrPeriods) {
-  const cagrMap: Record<string, number | null> = {
+  const map: Record<string, number | null> = {
     p1: cagrPeriods?.p1 ?? null,
     p2: cagrPeriods?.p2 ?? null,
     p3: cagrPeriods?.p3 ?? null,
+    p4: cagrPeriods?.p4 ?? null,
   };
 
   return BAND_DEFS.map((b) => (
@@ -105,15 +117,9 @@ function periodBands(cagrPeriods?: CagrPeriods) {
       fill={b.fill}
       fillOpacity={0.07}
       stroke={b.fill}
-      strokeOpacity={0.2}
+      strokeOpacity={0.22}
       strokeWidth={1}
-      label={
-        <PeriodAnnotation
-          periodLabel={b.label}
-          cagr={cagrMap[b.key]}
-          bandFill={b.fill}
-        />
-      }
+      label={<PeriodAnnotation periodLabel={b.label} cagr={map[b.key]} />}
     />
   ));
 }
@@ -144,7 +150,7 @@ function CustomTooltip({
   );
 }
 
-// ── Shared axes ───────────────────────────────────────────────────────────────
+// ── Shared axis helpers ───────────────────────────────────────────────────────
 function XAxis_() {
   return (
     <XAxis
@@ -152,7 +158,7 @@ function XAxis_() {
       type="number"
       domain={CHART_X_DOMAIN}
       allowDataOverflow={false}
-      tickCount={7}
+      ticks={[1960, 1991, 2004, 2014, 2025]}
       tick={{ fill: C_STONE, fontSize: 10 }}
       tickLine={false}
       axisLine={false}
@@ -180,8 +186,8 @@ function YAxis_() {
   );
 }
 
-const GRID = <CartesianGrid strokeDasharray="3 3" stroke={C_ASH} opacity={0.22} />;
-const MARGIN = { top: 42, right: 6, left: 0, bottom: 0 };
+const GRID   = <CartesianGrid strokeDasharray="3 3" stroke={C_ASH} opacity={0.22} />;
+const MARGIN = { top: 48, right: 6, left: 0, bottom: 0 };
 
 // ── Main component ────────────────────────────────────────────────────────────
 interface Props {
@@ -192,7 +198,7 @@ interface Props {
   height?: number;
 }
 
-export default function KPIChart({ data, indicator, metricView, cagrPeriods, height = 270 }: Props) {
+export default function KPIChart({ data, indicator, metricView, cagrPeriods, height = 280 }: Props) {
   if (!data.length) {
     return (
       <div style={{ height }} className="flex flex-col items-center justify-center gap-2 text-[#BCB8B1]">
@@ -206,20 +212,17 @@ export default function KPIChart({ data, indicator, metricView, cagrPeriods, hei
   }
 
   const hasNegative = data.some((d) => (d.value ?? 0) < 0);
-  // YoY always renders as bar; otherwise use indicator's preferred type
-  const chartType = metricView === 'yoy' ? 'bar' : indicator.chartType;
-
+  const chartType   = metricView === 'yoy' ? 'bar' : indicator.chartType;
   const tooltip = (
     <Tooltip
       content={<CustomTooltip indicator={indicator} metricView={metricView} />}
       cursor={{ stroke: C_ASH, strokeWidth: 1 }}
     />
   );
-
-  const bands = periodBands(cagrPeriods);
+  const bands       = periodBands(cagrPeriods);
   const commonProps = { data, margin: MARGIN };
 
-  // ── Area ────────────────────────────────────────────────────────────────────
+  // ── Area ──────────────────────────────────────────────────────────────────
   if (chartType === 'area') {
     return (
       <ResponsiveContainer width="100%" height={height}>
@@ -251,7 +254,7 @@ export default function KPIChart({ data, indicator, metricView, cagrPeriods, hei
     );
   }
 
-  // ── Bar (incl. YoY) ─────────────────────────────────────────────────────────
+  // ── Bar ────────────────────────────────────────────────────────────────────
   if (chartType === 'bar') {
     return (
       <ResponsiveContainer width="100%" height={height}>
@@ -276,7 +279,7 @@ export default function KPIChart({ data, indicator, metricView, cagrPeriods, hei
     );
   }
 
-  // ── Line ────────────────────────────────────────────────────────────────────
+  // ── Line ───────────────────────────────────────────────────────────────────
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart {...commonProps}>
