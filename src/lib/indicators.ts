@@ -254,6 +254,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE, IMF_SOURCE],
     chartType: 'line',
+    noCAGR: true,
   },
 
   // ── HUMAN DEVELOPMENT ────────────────────────────────────────────────────
@@ -270,6 +271,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE, UNDP_SOURCE],
     chartType: 'line',
+    noCAGR: true,
   },
   {
     id: 'school_primary',
@@ -284,6 +286,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE],
     chartType: 'line',
+    noCAGR: true,
   },
   {
     id: 'school_secondary',
@@ -298,6 +301,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE],
     chartType: 'line',
+    noCAGR: true,
   },
   {
     id: 'school_tertiary',
@@ -312,6 +316,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE],
     chartType: 'line',
+    noCAGR: true,
   },
   {
     id: 'edu_expenditure',
@@ -326,6 +331,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual', 'pct_gdp'],
     sources: [WB_SOURCE, UNDP_SOURCE],
     chartType: 'bar',
+    noCAGR: true,
   },
 
   // ── HEALTH ───────────────────────────────────────────────────────────────
@@ -398,6 +404,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual', 'pct_gdp'],
     sources: [WB_SOURCE, WHO_SOURCE],
     chartType: 'bar',
+    noCAGR: true,
   },
   {
     id: 'physicians',
@@ -426,6 +433,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE, WHO_SOURCE],
     chartType: 'line',
+    noCAGR: true,
   },
 
   // ── DEMOGRAPHICS ─────────────────────────────────────────────────────────
@@ -471,6 +479,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE, UN_SOURCE],
     chartType: 'area',
+    noCAGR: true,
   },
   {
     id: 'fertility',
@@ -499,6 +508,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE, UN_SOURCE],
     chartType: 'line',
+    noCAGR: true,
   },
 
   // ── INFRASTRUCTURE & TECHNOLOGY ──────────────────────────────────────────
@@ -515,6 +525,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE],
     chartType: 'area',
+    noCAGR: true,
   },
   {
     id: 'internet_users',
@@ -529,6 +540,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual', 'yoy'],
     sources: [WB_SOURCE],
     chartType: 'area',
+    noCAGR: true,
   },
   {
     id: 'mobile_subscriptions',
@@ -587,6 +599,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE],
     chartType: 'line',
+    noCAGR: true,
   },
   {
     id: 'renewable_energy',
@@ -601,6 +614,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE],
     chartType: 'area',
+    noCAGR: true,
   },
   {
     id: 'clean_water',
@@ -615,6 +629,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE, WHO_SOURCE],
     chartType: 'area',
+    noCAGR: true,
   },
 
   // ── SOCIAL EQUITY ────────────────────────────────────────────────────────
@@ -631,6 +646,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE],
     chartType: 'area',
+    noCAGR: true,
   },
   {
     id: 'gini',
@@ -659,6 +675,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE],
     chartType: 'line',
+    noCAGR: true,
   },
   {
     id: 'gender_parity_edu',
@@ -689,6 +706,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual', 'yoy'],
     sources: [WB_SOURCE, IMF_SOURCE],
     chartType: 'area',
+    noCAGR: true,
   },
   {
     id: 'govt_revenue_pct_gdp',
@@ -703,6 +721,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual', 'yoy'],
     sources: [WB_SOURCE, IMF_SOURCE],
     chartType: 'area',
+    noCAGR: true,
   },
   {
     id: 'govt_tax_revenue',
@@ -717,6 +736,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual', 'yoy'],
     sources: [WB_SOURCE, IMF_SOURCE],
     chartType: 'area',
+    noCAGR: true,
   },
   {
     id: 'govt_military_pct_gdp',
@@ -733,6 +753,7 @@ export const INDICATORS: Indicator[] = [
       { name: 'SIPRI via World Bank', url: 'https://data.worldbank.org/indicator/MS.MIL.XPND.GD.ZS', description: 'Stockholm International Peace Research Institute data via World Bank' },
     ],
     chartType: 'line',
+    noCAGR: true,
   },
   {
     id: 'govt_military_usd',
@@ -763,6 +784,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual', 'yoy'],
     sources: [WB_SOURCE, UNDP_SOURCE],
     chartType: 'bar',
+    noCAGR: true,
   },
   {
     id: 'govt_health_pct_gdp',
@@ -777,6 +799,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual', 'yoy'],
     sources: [WB_SOURCE, WHO_SOURCE],
     chartType: 'bar',
+    noCAGR: true,
   },
   {
     id: 'govt_capex',
@@ -791,6 +814,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual', 'yoy'],
     sources: [WB_SOURCE, IMF_SOURCE],
     chartType: 'area',
+    noCAGR: true,
     notes: 'Gross fixed capital formation by general government. Includes roads, railways, power, water and other public infrastructure investment.',
   },
   {
@@ -806,6 +830,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual', 'yoy'],
     sources: [WB_SOURCE, IMF_SOURCE],
     chartType: 'line',
+    noCAGR: true,
   },
   {
     id: 'govt_subsidies_pct_exp',
@@ -820,6 +845,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual', 'yoy'],
     sources: [WB_SOURCE, IMF_SOURCE],
     chartType: 'area',
+    noCAGR: true,
   },
   {
     id: 'govt_wages_pct_exp',
@@ -834,6 +860,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual', 'yoy'],
     sources: [WB_SOURCE, IMF_SOURCE],
     chartType: 'area',
+    noCAGR: true,
   },
 
   // ── HOUSEHOLD & LABOUR ───────────────────────────────────────────────────
@@ -879,6 +906,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE],
     chartType: 'line',
+    noCAGR: true,
   },
   {
     id: 'employment_ratio',
@@ -893,6 +921,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE],
     chartType: 'line',
+    noCAGR: true,
   },
   {
     id: 'vulnerable_employment',
@@ -907,6 +936,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual'],
     sources: [WB_SOURCE],
     chartType: 'area',
+    noCAGR: true,
   },
   {
     id: 'labour_productivity',
@@ -935,6 +965,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual', 'pct_gdp'],
     sources: [WB_SOURCE],
     chartType: 'area',
+    noCAGR: true,
   },
   {
     id: 'remittances',
@@ -949,6 +980,7 @@ export const INDICATORS: Indicator[] = [
     availableViews: ['actual', 'yoy'],
     sources: [WB_SOURCE],
     chartType: 'area',
+    noCAGR: true,
   },
   {
     id: 'adjusted_nni_pc',

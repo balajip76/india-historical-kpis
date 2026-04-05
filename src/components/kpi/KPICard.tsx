@@ -4,7 +4,9 @@ import { Indicator, MetricView, Source } from '@/types';
 import { useIndicatorData } from '@/hooks/useIndicatorData';
 import KPIChart from '@/components/charts/KPIChart';
 import MetricToggle from '@/components/ui/MetricToggle';
+import InfoTooltip from '@/components/ui/InfoTooltip';
 import { formatValue } from '@/lib/worldbank';
+import { generateNarrative } from '@/lib/narrative';
 import { clsx } from 'clsx';
 
 // ── Source URL → specific data page ──────────────────────────────────────────
@@ -66,7 +68,14 @@ export default function KPICard({ indicator, countryCode, defaultView = 'actual'
       <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-3">
         {/* Title + description */}
         <div className="mb-3">
-          <h3 className="text-sm font-semibold text-[#463F3A] leading-snug">{indicator.label}</h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className="text-sm font-semibold text-[#463F3A] leading-snug">{indicator.label}</h3>
+            {!isLoading && rawData.length > 0 && (
+              <InfoTooltip
+                content={generateNarrative(indicator, rawData, cagrPeriods)}
+              />
+            )}
+          </div>
           <p className="text-[11px] text-[#8A817C] mt-0.5 leading-relaxed line-clamp-2">
             {indicator.description}
           </p>
