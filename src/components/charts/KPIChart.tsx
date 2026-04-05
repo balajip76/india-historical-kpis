@@ -12,20 +12,26 @@ import {
   CartesianGrid,
   Tooltip,
   ReferenceLine,
+  ReferenceArea,
 } from 'recharts';
-import { DataPoint, MetricView, Indicator } from '@/types';
+import { MetricView, Indicator, Source } from '@/types';
 import { formatValue } from '@/lib/worldbank';
+
+// Shared global x-axis domain across all charts for visual consistency
+export const CHART_X_DOMAIN: [number, number] = [1960, 2024];
+
+// Three historical periods — always rendered as subtle bands
+const PERIODS = [
+  { x1: 1960, x2: 1991, fill: '#463F3A', label: 'Pre-1991' },
+  { x1: 1991, x2: 2014, fill: '#8A817C', label: '1991–2014' },
+  { x1: 2014, x2: 2024, fill: '#E0AFA0', label: '2014+' },
+];
 
 interface Props {
   data: { year: number; value: number | null }[];
   indicator: Indicator;
   metricView: MetricView;
   height?: number;
-}
-
-interface TooltipPayload {
-  value: number;
-  name: string;
 }
 
 function CustomTooltip({
@@ -64,49 +70,73 @@ function CustomTooltip({
 
 const CHART_COLOR = '#E0AFA0';
 const CHART_COLOR_DARK = '#463F3A';
-const CHART_COLOR_NEG = '#BCB8B1';
 
-export default function KPIChart({ data, indicator, metricView, height = 220 }: Props) {
-  if (!data.length) return (
-    <div className="flex items-center justify-center h-40 text-[#BCB8B1] text-sm">
-      No data available for this period
-    </div>
-  );
+// Subtle period bands — rendered below the data series
+function periodBands() {
+  return PERIODS.map((p) => (
+    <ReferenceArea
+      key={p.label}
+      x1={p.x1}
+      x2={p.x2}
+      fill={p.fill}
+      fillOpacity={0.055}
+      stroke={p.fill}
+      strokeOpacity={0.15}
+      strokeWidth={1}
+      label={{
+        value: p.label,
+        position: 'insideTopLeft',
+        fontSize: 9,
+        fill: p.fill,
+        fillOpacity: 0.55,
+        dy: 4,
+        dx: 4,
+      }}
+    />
+  ));
+}
 
+export default function KPIChart({ data, indicator, metricView, height = 260 }: Props) {
   const hasNegative = data.some((d) => (d.value ?? 0) < 0);
   const chartType = metricView === 'yoy' ? 'bar' : indicator.chartType;
 
   const commonProps = {
     data,
-    margin: { top: 4, right: 8, left: 0, bottom: 0 },
+    margin: { top: 16, right: 8, left: 0, bottom: 0 },
   };
 
   const xAxis = (
     <XAxis
       dataKey="year"
-      tick={{ fill: '#8A817C', fontSize: 11 }}
+      type="number"
+      domain={CHART_X_DOMAIN}
+      allowDataOverflow={false}
+      tickCount={7}
+      tick={{ fill: '#8A817C', fontSize: 10 }}
       tickLine={false}
       axisLine={false}
-      interval="preserveStartEnd"
+      tickFormatter={(v) => String(v)}
     />
   );
 
   const yAxis = (
     <YAxis
-      tick={{ fill: '#8A817C', fontSize: 11 }}
+      tick={{ fill: '#8A817C', fontSize: 10 }}
       tickLine={false}
       axisLine={false}
-      width={48}
+      width={50}
       tickFormatter={(v) => {
-        if (Math.abs(v) >= 1e9) return `${(v / 1e9).toFixed(0)}B`;
-        if (Math.abs(v) >= 1e6) return `${(v / 1e6).toFixed(0)}M`;
-        if (Math.abs(v) >= 1e3) return `${(v / 1e3).toFixed(0)}K`;
-        return v.toFixed(1);
+        const abs = Math.abs(v);
+        if (abs >= 1e12) return `${(v / 1e12).toFixed(1)}T`;
+        if (abs >= 1e9) return `${(v / 1e9).toFixed(1)}B`;
+        if (abs >= 1e6) return `${(v / 1e6).toFixed(1)}M`;
+        if (abs >= 1e3) return `${(v / 1e3).toFixed(1)}K`;
+        return Number(v.toFixed(1)).toString();
       }}
     />
   );
 
-  const grid = <CartesianGrid strokeDasharray="3 3" stroke="#BCB8B1" opacity={0.3} />;
+  const grid = <CartesianGrid strokeDasharray="3 3" stroke="#BCB8B1" opacity={0.25} />;
 
   const tooltip = (
     <Tooltip
@@ -115,16 +145,25 @@ export default function KPIChart({ data, indicator, metricView, height = 220 }: 
     />
   );
 
+  if (!data.length) {
+    return (
+      <div style={{ height }} className="flex items-center justify-center text-[#BCB8B1] text-sm">
+        No data available
+      </div>
+    );
+  }
+
   if (chartType === 'area') {
     return (
       <ResponsiveContainer width="100%" height={height}>
         <AreaChart {...commonProps}>
           <defs>
             <linearGradient id={`grad-${indicator.id}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={CHART_COLOR} stopOpacity={0.4} />
+              <stop offset="5%" stopColor={CHART_COLOR} stopOpacity={0.45} />
               <stop offset="95%" stopColor={CHART_COLOR} stopOpacity={0.02} />
             </linearGradient>
           </defs>
+          {periodBands()}
           {grid}
           {xAxis}
           {yAxis}
@@ -149,6 +188,7 @@ export default function KPIChart({ data, indicator, metricView, height = 220 }: 
     return (
       <ResponsiveContainer width="100%" height={height}>
         <BarChart {...commonProps}>
+          {periodBands()}
           {grid}
           {xAxis}
           {yAxis}
@@ -158,9 +198,7 @@ export default function KPIChart({ data, indicator, metricView, height = 220 }: 
             dataKey="value"
             radius={[2, 2, 0, 0]}
             fill={CHART_COLOR}
-            // Color negative bars differently
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            label={false}
+            maxBarSize={10}
           />
         </BarChart>
       </ResponsiveContainer>
@@ -171,6 +209,7 @@ export default function KPIChart({ data, indicator, metricView, height = 220 }: 
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart {...commonProps}>
+        {periodBands()}
         {grid}
         {xAxis}
         {yAxis}

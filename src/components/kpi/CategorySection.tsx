@@ -33,8 +33,8 @@ export default function CategorySection({ categoryId, country }: Props) {
         </div>
       </div>
 
-      {/* KPI grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      {/* KPI grid — 2 columns */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {indicators.map((indicator, idx) => (
           <div
             key={indicator.id}
