@@ -7,49 +7,76 @@ interface Props {
 
 export default function HeroSection({ country }: Props) {
   return (
-    <div className="bg-[#463F3A] text-[#F4F3EE] py-10 px-4 sm:px-6 lg:px-8">
+    <div className="bg-[#463F3A] text-[#F4F3EE] py-4 sm:py-5 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-4xl">{country.flag}</span>
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-[#F4F3EE] leading-tight">
-                  {country.name}
-                </h2>
-                <p className="text-sm text-[#BCB8B1]">{country.region}</p>
-              </div>
+        {/* Single compact row */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* Left: country identity */}
+          <div className="flex items-center gap-3">
+            <span className="text-3xl sm:text-4xl leading-none">{country.flag}</span>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold text-[#F4F3EE] leading-tight">
+                {country.name}
+              </h2>
+              <p className="text-xs text-[#BCB8B1]">{country.region}</p>
             </div>
-            <p className="text-sm text-[#8A817C] max-w-xl leading-relaxed mt-3">
-              Comprehensive historical KPIs tracking {country.name}&rsquo;s development across economy,
-              health, education, demographics, infrastructure, environment, and social equity.
-              All data sourced from World Bank, IMF, WHO, UN, and other authoritative institutions.
-            </p>
           </div>
-          <div className="flex flex-col gap-2 text-right">
-            <div className="text-xs text-[#8A817C] uppercase tracking-wider">Coverage</div>
-            <div className="text-2xl font-bold text-[#E0AFA0]">65+</div>
-            <div className="text-xs text-[#BCB8B1]">years of data (1960–present)</div>
-            <div className="text-2xl font-bold text-[#E0AFA0] mt-1">30+</div>
-            <div className="text-xs text-[#BCB8B1]">indicators across 7 categories</div>
+
+          {/* Center: description — hidden on mobile */}
+          <p className="hidden lg:block text-xs text-[#8A817C] max-w-sm leading-relaxed">
+            Historical KPIs across economy, health, education, demographics, infrastructure,
+            environment &amp; social equity — sourced from World Bank, IMF, WHO &amp; UN.
+          </p>
+
+          {/* Right: stats */}
+          <div className="flex items-center gap-5">
+            <div className="text-center">
+              <div className="text-xl font-bold text-[#E0AFA0] leading-none">65+</div>
+              <div className="text-[10px] text-[#BCB8B1] mt-0.5">years</div>
+            </div>
+            <div className="w-px h-6 bg-[#8A817C]/30" />
+            <div className="text-center">
+              <div className="text-xl font-bold text-[#E0AFA0] leading-none">40+</div>
+              <div className="text-[10px] text-[#BCB8B1] mt-0.5">indicators</div>
+            </div>
+            <div className="w-px h-6 bg-[#8A817C]/30" />
+            <div className="text-center">
+              <div className="text-xl font-bold text-[#E0AFA0] leading-none">8</div>
+              <div className="text-[10px] text-[#BCB8B1] mt-0.5">categories</div>
+            </div>
           </div>
         </div>
 
-        {/* Metric view legend */}
-        <div className="mt-6 pt-6 border-t border-[#8A817C]/20 flex flex-wrap gap-4">
+        {/* Metric legend — compact pill row */}
+        <div className="mt-3 pt-3 border-t border-[#8A817C]/20 flex flex-wrap gap-x-4 gap-y-1.5">
           {[
-            { label: 'Actual', desc: 'Raw values in original units' },
-            { label: 'YoY %', desc: 'Year-over-year growth rate' },
-            { label: 'CAGR', desc: 'Compound annual growth rate' },
-            { label: '% GDP', desc: 'As share of gross domestic product' },
+            { label: 'Actual', desc: 'Raw values' },
+            { label: 'YoY %', desc: 'Year-on-year change' },
+            { label: 'CAGR', desc: '3 preset eras' },
+            { label: '% GDP', desc: 'GDP share' },
           ].map((m) => (
-            <div key={m.label} className="flex items-center gap-2">
-              <span className="px-2 py-0.5 bg-[#E0AFA0]/20 text-[#E0AFA0] text-xs font-semibold rounded-md">
+            <div key={m.label} className="flex items-center gap-1.5">
+              <span className="px-1.5 py-0.5 bg-[#E0AFA0]/20 text-[#E0AFA0] text-[10px] font-semibold rounded">
                 {m.label}
               </span>
-              <span className="text-xs text-[#8A817C]">{m.desc}</span>
+              <span className="text-[10px] text-[#8A817C]">{m.desc}</span>
             </div>
           ))}
+          <div className="flex items-center gap-3 ml-auto">
+            {[
+              { color: '#8A817C', label: 'Pre-1991' },
+              { color: '#BCB8B1', label: '1991–2014' },
+              { color: '#E0AFA0', label: '2014+' },
+            ].map((p) => (
+              <div key={p.label} className="flex items-center gap-1.5">
+                <span
+                  className="w-3 h-2.5 rounded-sm inline-block opacity-60"
+                  style={{ backgroundColor: p.color }}
+                />
+                <span className="text-[10px] text-[#8A817C]">{p.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

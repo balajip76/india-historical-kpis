@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@theme {
+  /* xs breakpoint at 480px — between mobile and sm (640px) */
+  --breakpoint-xs: 480px;
+}
+
 :root {
   --color-espresso: #463F3A;
   --color-stone: #8A817C;

@@ -16,7 +16,7 @@ export default function HomePage() {
     setActiveCategory(id);
     const el = document.getElementById(id);
     if (el) {
-      const offset = 128; // header + nav height
+      const offset = 104; // header (56px) + nav (~48px)
       const top = el.getBoundingClientRect().top + window.scrollY - offset;
       window.scrollTo({ top, behavior: 'smooth' });
     }

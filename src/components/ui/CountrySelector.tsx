@@ -37,10 +37,10 @@ export default function CountrySelector({ selected, onChange }: Props) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-4 py-2 bg-[#F4F3EE] border border-[#BCB8B1] rounded-xl hover:border-[#8A817C] transition-all duration-200 text-sm font-medium text-[#463F3A] min-w-[160px]"
+        className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-[#F4F3EE] border border-[#BCB8B1] rounded-xl hover:border-[#8A817C] transition-all duration-200 text-sm font-medium text-[#463F3A]"
       >
         <span className="text-lg">{selected.flag}</span>
-        <span className="flex-1 text-left">{selected.name}</span>
+        <span className="hidden xs:inline sm:inline flex-1 text-left">{selected.name}</span>
         <svg
           className={clsx('w-4 h-4 text-[#8A817C] transition-transform duration-200', open && 'rotate-180')}
           fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -50,7 +50,7 @@ export default function CountrySelector({ selected, onChange }: Props) {
       </button>
 
       {open && (
-        <div className="absolute top-full mt-2 right-0 z-50 w-72 bg-[#F4F3EE] border border-[#BCB8B1] rounded-xl shadow-lg overflow-hidden animate-fade-in">
+        <div className="absolute top-full mt-2 right-0 z-50 w-[min(18rem,calc(100vw-2rem))] bg-[#F4F3EE] border border-[#BCB8B1] rounded-xl shadow-lg overflow-hidden animate-fade-in">
           <div className="p-2 border-b border-[#BCB8B1]/50">
             <input
               autoFocus

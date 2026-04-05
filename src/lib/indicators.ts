@@ -213,7 +213,7 @@ export const INDICATORS: Indicator[] = [
     unitShort: 'USD',
     format: 'currency',
     scale: 'billions',
-    availableViews: ['actual', 'yoy', 'pct_gdp'],
+    availableViews: ['actual', 'yoy', 'cagr', 'pct_gdp'],
     sources: [WB_SOURCE],
     chartType: 'bar',
   },
