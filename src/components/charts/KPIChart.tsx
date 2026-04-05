@@ -61,27 +61,28 @@ function PeriodAnnotation({ viewBox, periodLabel, cagr, bandFill }: AnnotationPr
         {periodLabel}
       </text>
 
-      {/* Arrow + CAGR value */}
+      {/* "CAGR" label */}
       {hasCAGR && (
         <text
-          x={cx} y={y + 25}
+          x={cx} y={y + 24}
           textAnchor="middle"
-          fontSize={9.5} fontWeight={800}
-          fill={cagrColor} fillOpacity={0.82}
+          fontSize={7} fontWeight={600}
+          fill={C_STONE} fillOpacity={0.5}
+          letterSpacing={0.5}
         >
-          {arrow} {cagrStr}
+          CAGR
         </text>
       )}
 
-      {/* "p.a." sub-label */}
+      {/* Arrow + value */}
       {hasCAGR && (
         <text
           x={cx} y={y + 35}
           textAnchor="middle"
-          fontSize={7} fontWeight={500}
-          fill={C_STONE} fillOpacity={0.55}
+          fontSize={10} fontWeight={800}
+          fill={cagrColor} fillOpacity={0.85}
         >
-          p.a.
+          {arrow} {cagrStr}
         </text>
       )}
     </g>

@@ -117,7 +117,7 @@ export default function KPICard({ indicator, countryCode, defaultView = 'actual'
             data={chartData}
             indicator={indicator}
             metricView={metricView}
-            cagrPeriods={cagrPeriods}
+            cagrPeriods={indicator.noCAGR ? undefined : cagrPeriods}
             height={270}
           />
         )}

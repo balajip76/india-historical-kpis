@@ -28,6 +28,7 @@ export interface Indicator {
   availableViews: MetricView[];
   sources: Source[];
   chartType: 'line' | 'area' | 'bar';
+  noCAGR?: boolean; // true for indicators that are themselves rates/growth metrics
   notes?: string;
 }
 
