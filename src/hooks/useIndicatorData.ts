@@ -45,7 +45,7 @@ export function useIndicatorData(
   });
 
   const validData = rawData.filter((d) => d.value !== null);
-  const latestYear = validData.at(-1)?.year ?? 2024;
+  const latestYear = validData.at(-1)?.year ?? new Date().getFullYear();
 
   // Four political-era periods — computed from actual values and rendered on chart bands
   const cagrPeriods: CagrPeriods = {

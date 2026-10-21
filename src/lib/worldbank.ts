@@ -6,7 +6,7 @@ export async function fetchWBIndicator(
   countryCode: string,
   wbCode: string,
   startYear = 1960,
-  endYear = 2024
+  endYear = new Date().getFullYear()
 ): Promise<DataPoint[]> {
   const url = `${WB_BASE}/country/${countryCode}/indicator/${wbCode}?format=json&date=${startYear}:${endYear}&per_page=100&mrv=70`;
 

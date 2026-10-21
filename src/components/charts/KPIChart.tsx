@@ -12,8 +12,8 @@ import { MetricView, Indicator } from '@/types';
 import { CagrPeriods } from '@/hooks/useIndicatorData';
 import { formatValue } from '@/lib/worldbank';
 
-// X-axis domain — extended to 2025 to include the final period band
-export const CHART_X_DOMAIN: [number, number] = [1960, 2025];
+// X-axis start; the end is each chart's latest data year so no empty space trails the series
+const CHART_START_YEAR = 1960;
 
 // Palette colours
 const C_ROSE  = '#E0AFA0';
@@ -22,11 +22,11 @@ const C_STONE = '#8A817C';
 const C_ASH   = '#BCB8B1';
 
 // ── Four era bands ────────────────────────────────────────────────────────────
-const BAND_DEFS = [
-  { x1: 1960, x2: 1991, fill: C_DARK,  key: 'p1', label: '1960–1991' },
-  { x1: 1991, x2: 2004, fill: C_STONE, key: 'p2', label: '1991–2004' },
-  { x1: 2004, x2: 2014, fill: C_ASH,   key: 'p3', label: '2004–2014' },
-  { x1: 2014, x2: 2025, fill: C_ROSE,  key: 'p4', label: '2014–2025' },
+const bandDefs = (endYear: number) => [
+  { x1: 1960, x2: 1991,    fill: C_DARK,  key: 'p1', label: '1960–1991' },
+  { x1: 1991, x2: 2004,    fill: C_STONE, key: 'p2', label: '1991–2004' },
+  { x1: 2004, x2: 2014,    fill: C_ASH,   key: 'p3', label: '2004–2014' },
+  { x1: 2014, x2: endYear, fill: C_ROSE,  key: 'p4', label: `2014–${endYear}` },
 ] as const;
 
 // ── CAGR annotation rendered inside each band ─────────────────────────────────
@@ -101,7 +101,7 @@ function PeriodAnnotation({ viewBox, periodLabel, cagr }: AnnotationProps) {
 }
 
 // ── Render all four bands ─────────────────────────────────────────────────────
-function periodBands(cagrPeriods?: CagrPeriods) {
+function periodBands(endYear: number, cagrPeriods?: CagrPeriods) {
   const map: Record<string, number | null> = {
     p1: cagrPeriods?.p1 ?? null,
     p2: cagrPeriods?.p2 ?? null,
@@ -109,7 +109,7 @@ function periodBands(cagrPeriods?: CagrPeriods) {
     p4: cagrPeriods?.p4 ?? null,
   };
 
-  return BAND_DEFS.map((b) => (
+  return bandDefs(endYear).map((b) => (
     <ReferenceArea
       key={b.label}
       x1={b.x1}
@@ -151,14 +151,14 @@ function CustomTooltip({
 }
 
 // ── Shared axis helpers ───────────────────────────────────────────────────────
-function XAxis_() {
+function XAxis_({ endYear }: { endYear: number }) {
   return (
     <XAxis
       dataKey="year"
       type="number"
-      domain={CHART_X_DOMAIN}
+      domain={[CHART_START_YEAR, endYear]}
       allowDataOverflow={false}
-      ticks={[1960, 1991, 2004, 2014, 2025]}
+      ticks={[1960, 1991, 2004, 2014, endYear]}
       tick={{ fill: C_STONE, fontSize: 10 }}
       tickLine={false}
       axisLine={false}
@@ -219,7 +219,8 @@ export default function KPIChart({ data, indicator, metricView, cagrPeriods, hei
       cursor={{ stroke: C_ASH, strokeWidth: 1 }}
     />
   );
-  const bands       = periodBands(cagrPeriods);
+  const endYear     = Math.max(2015, data.at(-1)?.year ?? 2015);
+  const bands       = periodBands(endYear, cagrPeriods);
   const commonProps = { data, margin: MARGIN };
 
   // ── Area ──────────────────────────────────────────────────────────────────
@@ -235,7 +236,7 @@ export default function KPIChart({ data, indicator, metricView, cagrPeriods, hei
           </defs>
           {bands}
           {GRID}
-          <XAxis_ />
+          <XAxis_ endYear={endYear} />
           <YAxis_ />
           {tooltip}
           {hasNegative && <ReferenceLine y={0} stroke={C_ASH} strokeDasharray="3 3" />}
@@ -261,7 +262,7 @@ export default function KPIChart({ data, indicator, metricView, cagrPeriods, hei
         <BarChart {...commonProps}>
           {bands}
           {GRID}
-          <XAxis_ />
+          <XAxis_ endYear={endYear} />
           <YAxis_ />
           {tooltip}
           {hasNegative && <ReferenceLine y={0} stroke={C_STONE} />}
@@ -285,7 +286,7 @@ export default function KPIChart({ data, indicator, metricView, cagrPeriods, hei
       <LineChart {...commonProps}>
         {bands}
         {GRID}
-        <XAxis_ />
+        <XAxis_ endYear={endYear} />
         <YAxis_ />
         {tooltip}
         {hasNegative && <ReferenceLine y={0} stroke={C_ASH} strokeDasharray="3 3" />}

@@ -40,6 +40,8 @@ export default function KPICard({ indicator, countryCode, defaultView = 'actual'
 
   const latestValue = latestPoint?.value;
   const latestYear  = latestPoint?.year;
+  // Last year the *displayed* series has data (differs from latestYear for derived views)
+  const dataThrough = chartData.at(-1)?.year;
 
   // Trend arrow from last two non-null points
   const tail = rawData.filter((d) => d.value !== null).slice(-2);
@@ -134,6 +136,11 @@ export default function KPICard({ indicator, countryCode, defaultView = 'actual'
 
       {/* ── Source footer ─────────────────────────────────────────────── */}
       <div className="px-4 sm:px-5 py-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 border-t border-[#BCB8B1]/25 bg-[#F4F3EE]/50">
+        {dataThrough && (
+          <span className="order-last ml-auto text-[10px] font-medium text-[#8A817C] tabular-nums">
+            Data through {dataThrough}
+          </span>
+        )}
         <span className="text-[10px] text-[#BCB8B1]">Source</span>
         <span className="text-[10px] text-[#BCB8B1]">·</span>
         {indicator.sources.map((s, i) => (

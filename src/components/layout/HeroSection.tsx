@@ -9,7 +9,7 @@ const ERA_LEGEND = [
   { color: '#463F3A', label: '1960–1991' },
   { color: '#8A817C', label: '1991–2004' },
   { color: '#BCB8B1', label: '2004–2014' },
-  { color: '#E0AFA0', label: '2014–2025' },
+  { color: '#E0AFA0', label: '2014–present' },
 ];
 
 export default function HeroSection({ country }: Props) {
